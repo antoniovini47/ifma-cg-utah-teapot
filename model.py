@@ -1,11 +1,3 @@
-#
-# teapot: this is the original non-rational bezier teapot data. the data
-#         comes from Martin Newel and Jim Blinn.
-#         
-# Thomas V Thompson II
-# January 28 2000
-#
-
 TeaSrfs: array(
     surface( 4, "ec_open", "kv_bezier", 4, "ec_open", "kv_bezier",
 	array(
