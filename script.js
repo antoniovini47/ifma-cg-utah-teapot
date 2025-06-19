@@ -1,4 +1,4 @@
-// Vertex shader program
+
 const vsSource = `
     attribute vec4 aVertexPosition;
     attribute vec3 aNormal;
@@ -18,7 +18,7 @@ const vsSource = `
     }
 `;
 
-// Fragment shader program
+
 const fsSource = `
     precision mediump float;
     
@@ -31,11 +31,9 @@ const fsSource = `
     
     void main() {
         if (uWireframeMode) {
-            // Wireframe mode - show edges
             vec3 worldPos = vWorldPos;
             float edgeWidth = 0.02;
             
-            // Check if we're near an edge
             vec3 grid = fract(worldPos * 10.0);
             float edge = min(min(grid.x, grid.y), grid.z);
             
@@ -45,28 +43,22 @@ const fsSource = `
                 gl_FragColor = vec4(0.1, 0.1, 0.1, 1.0);
             }
         } else {
-            // Normal lighting mode
             vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
             vec3 normal = normalize(vNormal);
             float diff = max(dot(normal, lightDir), 0.0);
             
-            // Ambient light
             vec3 ambient = vec3(0.1, 0.1, 0.1);
             
-            // Diffuse light with more contrast
             vec3 diffuse = vec3(0.9, 0.9, 0.9) * diff * uLightIntensity;
             
-            // Specular light
             vec3 viewDir = normalize(-vPosition);
             vec3 reflectDir = reflect(-lightDir, normal);
             float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
             vec3 specular = vec3(0.8, 0.8, 0.8) * spec * uLightIntensity;
             
-            // Add some color variation based on position to highlight tessellation
-            vec3 color = vec3(0.8, 0.6, 0.4); // Base teapot color
+            vec3 color = vec3(0.8, 0.6, 0.4);
             color += vec3(0.1) * sin(vWorldPos.x * 5.0) * sin(vWorldPos.y * 5.0) * sin(vWorldPos.z * 5.0);
             
-            // Combine lights
             vec3 result = (ambient + diffuse + specular) * color;
             
             gl_FragColor = vec4(result, 1.0);
@@ -74,7 +66,7 @@ const fsSource = `
     }
 `;
 
-// Initialize a shader program
+
 function initShaderProgram(gl, vsSource, fsSource) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -92,7 +84,7 @@ function initShaderProgram(gl, vsSource, fsSource) {
     return shaderProgram;
 }
 
-// Create a shader of the given type, uploads the source and compiles it
+
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -107,7 +99,7 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-// Calculate Bezier surface point
+
 function calculateBezierPoint(controlPoints, u, v) {
     const n = controlPoints.length - 1;
     const m = controlPoints[0].length - 1;
@@ -128,7 +120,6 @@ function calculateBezierPoint(controlPoints, u, v) {
     return result;
 }
 
-// Calculate Bezier surface normal
 function calculateBezierNormal(controlPoints, u, v, epsilon = 0.001) {
     const point = calculateBezierPoint(controlPoints, u, v);
     const pointU = calculateBezierPoint(controlPoints, u + epsilon, v);
@@ -146,7 +137,6 @@ function calculateBezierNormal(controlPoints, u, v, epsilon = 0.001) {
         pointV[2] - point[2]
     ];
     
-    // Cross product of tangents gives normal
     return [
         tangentU[1] * tangentV[2] - tangentU[2] * tangentV[1],
         tangentU[2] * tangentV[0] - tangentU[0] * tangentV[2],
@@ -154,7 +144,6 @@ function calculateBezierNormal(controlPoints, u, v, epsilon = 0.001) {
     ];
 }
 
-// Calculate binomial coefficient
 function binomial(n, k) {
     let coeff = 1;
     for (let i = 1; i <= k; i++) {
@@ -163,13 +152,11 @@ function binomial(n, k) {
     return coeff;
 }
 
-// Generate vertices for a Bezier surface
 function generateBezierSurface(controlPoints, uSteps, vSteps) {
     const vertices = [];
     const normals = [];
     const indices = [];
 
-    // Generate vertices
     for (let i = 0; i <= uSteps; i++) {
         const u = i / uSteps;
         for (let j = 0; j <= vSteps; j++) {
@@ -182,7 +169,6 @@ function generateBezierSurface(controlPoints, uSteps, vSteps) {
         }
     }
 
-    // Generate indices
     for (let i = 0; i < uSteps; i++) {
         for (let j = 0; j < vSteps; j++) {
             const topLeft = i * (vSteps + 1) + j;
@@ -198,7 +184,6 @@ function generateBezierSurface(controlPoints, uSteps, vSteps) {
     return { vertices, normals, indices };
 }
 
-// Main function
 async function main() {
     const canvas = document.querySelector('#glCanvas');
     const gl = canvas.getContext('webgl');
@@ -208,14 +193,12 @@ async function main() {
         return;
     }
 
-    // Set clear color to match background
     gl.clearColor(0.102, 0.102, 0.18, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.enable(gl.CULL_FACE);
 
-    // Initialize shader program
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
 
     const programInfo = {
@@ -232,11 +215,9 @@ async function main() {
         },
     };
 
-    // Load teapot data
     const response = await fetch('v4/teapot_data.json');
     const teapotData = await response.json();
 
-    // State variables
     let rotationSpeed = 1.0;
     let lightIntensity = 1.0;
     let tessellation = 20;
@@ -250,7 +231,6 @@ async function main() {
     let zoom = -6.0;
     let wireframeMode = false;
 
-    // Event listeners for controls
     document.getElementById('rotationSpeed').addEventListener('input', (e) => {
         rotationSpeed = parseFloat(e.target.value);
     });
@@ -270,7 +250,6 @@ async function main() {
         generateTeapot();
     });
 
-    // Mouse event listeners
     canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
         lastMouseX = e.clientX;
@@ -297,7 +276,6 @@ async function main() {
         zoom = Math.max(-10, Math.min(-2, zoom));
     });
 
-    // Generate teapot geometry
     function generateTeapot() {
         const allVertices = [];
         const allNormals = [];
@@ -312,11 +290,9 @@ async function main() {
             indexOffset += vertices.length / 3;
         });
 
-        // Calculate triangle count
         const triangleCount = allIndices.length / 3;
         document.getElementById('triangleCountValue').textContent = triangleCount.toLocaleString();
 
-        // Create buffers
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(allVertices), gl.STATIC_DRAW);
@@ -334,14 +310,11 @@ async function main() {
 
     let teapotBuffers = generateTeapot();
 
-    // Initialize display values
     document.getElementById('tessellationValue').textContent = tessellation;
 
-    // Draw the scene
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Create perspective matrix
         const fieldOfView = 45 * Math.PI / 180;
         const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
         const zNear = 0.1;
@@ -349,14 +322,12 @@ async function main() {
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-        // Set the drawing position
         const modelViewMatrix = mat4.create();
         mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, zoom]);
         mat4.rotate(modelViewMatrix, modelViewMatrix, rotationX, [1, 0, 0]);
         mat4.rotate(modelViewMatrix, modelViewMatrix, rotationY, [0, 1, 0]);
         mat4.rotate(modelViewMatrix, modelViewMatrix, Date.now() * 0.001 * rotationSpeed, [0, 1, 0]);
 
-        // Tell WebGL how to pull out the positions from the position buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffers.positionBuffer);
         gl.vertexAttribPointer(
             programInfo.attribLocations.vertexPosition,
@@ -367,7 +338,6 @@ async function main() {
             0);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
-        // Tell WebGL how to pull out the normals from the normal buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffers.normalBuffer);
         gl.vertexAttribPointer(
             programInfo.attribLocations.normal,
@@ -378,13 +348,10 @@ async function main() {
             0);
         gl.enableVertexAttribArray(programInfo.attribLocations.normal);
 
-        // Tell WebGL which indices to use to index the vertices
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotBuffers.indexBuffer);
 
-        // Tell WebGL to use our program when drawing
         gl.useProgram(programInfo.program);
 
-        // Set the shader uniforms
         gl.uniformMatrix4fv(
             programInfo.uniformLocations.projectionMatrix,
             false,
@@ -400,7 +367,6 @@ async function main() {
             programInfo.uniformLocations.wireframeMode,
             wireframeMode ? 1 : 0);
 
-        // Draw the elements
         gl.drawElements(gl.TRIANGLES, teapotBuffers.indexCount, gl.UNSIGNED_SHORT, 0);
 
         requestAnimationFrame(drawScene);
