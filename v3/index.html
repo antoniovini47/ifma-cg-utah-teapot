@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utah Teapot WebGL Viewer</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a202c; /* Tailwind gray-900 */
+            color: #e2e8f0; /* Tailwind gray-200 */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        canvas {
+            display: block;
+            border-radius: 1rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            background-color: #2d3748; /* Tailwind gray-700 */
+            touch-action: none; /* Prevent browser touch actions */
+        }
+        #loading-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            color: #a0aec0; /* Tailwind gray-400 */
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <h1 class="text-4xl font-bold mb-8 text-white">Utah Teapot WebGL Viewer</h1>
+    <div class="relative w-full max-w-4xl aspect-video bg-gray-700 rounded-xl shadow-lg flex items-center justify-center">
+        <canvas id="glCanvas" class="w-full h-full"></canvas>
+        <div id="loading-message" class="hidden">Loading Teapot Data...</div>
+    </div>
+    <div class="mt-8 text-center text-gray-400">
+        <p>Drag your mouse to rotate the teapot.</p>
+        <p>Scroll to zoom in/out.</p>
+    </div>
+
+    <!-- WebGL Library and Custom Script -->
+    <!-- You might need a more robust math library for matrices and vectors.
+         For simplicity, I'll implement basic matrix operations in script.js.
+         For a production app, consider gl-matrix: https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.3.0/gl-matrix-min.js
+    -->
+    <script src="script.js"></script>
+</body>
+</html>
