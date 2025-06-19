@@ -8,11 +8,13 @@ const vsSource = `
     
     varying vec3 vNormal;
     varying vec3 vPosition;
+    varying vec3 vWorldPos;
     
     void main() {
         gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
         vNormal = mat3(uModelViewMatrix) * aNormal;
         vPosition = vec3(uModelViewMatrix * aVertexPosition);
+        vWorldPos = vec3(aVertexPosition);
     }
 `;
 
@@ -22,30 +24,53 @@ const fsSource = `
     
     varying vec3 vNormal;
     varying vec3 vPosition;
+    varying vec3 vWorldPos;
     
     uniform float uLightIntensity;
+    uniform bool uWireframeMode;
     
     void main() {
-        vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-        vec3 normal = normalize(vNormal);
-        float diff = max(dot(normal, lightDir), 0.0);
-        
-        // Ambient light
-        vec3 ambient = vec3(0.2, 0.2, 0.2);
-        
-        // Diffuse light
-        vec3 diffuse = vec3(0.8, 0.8, 0.8) * diff * uLightIntensity;
-        
-        // Specular light
-        vec3 viewDir = normalize(-vPosition);
-        vec3 reflectDir = reflect(-lightDir, normal);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-        vec3 specular = vec3(0.5, 0.5, 0.5) * spec * uLightIntensity;
-        
-        // Combine lights
-        vec3 result = ambient + diffuse + specular;
-        
-        gl_FragColor = vec4(result, 1.0);
+        if (uWireframeMode) {
+            // Wireframe mode - show edges
+            vec3 worldPos = vWorldPos;
+            float edgeWidth = 0.02;
+            
+            // Check if we're near an edge
+            vec3 grid = fract(worldPos * 10.0);
+            float edge = min(min(grid.x, grid.y), grid.z);
+            
+            if (edge < edgeWidth) {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            } else {
+                gl_FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+            }
+        } else {
+            // Normal lighting mode
+            vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+            vec3 normal = normalize(vNormal);
+            float diff = max(dot(normal, lightDir), 0.0);
+            
+            // Ambient light
+            vec3 ambient = vec3(0.1, 0.1, 0.1);
+            
+            // Diffuse light with more contrast
+            vec3 diffuse = vec3(0.9, 0.9, 0.9) * diff * uLightIntensity;
+            
+            // Specular light
+            vec3 viewDir = normalize(-vPosition);
+            vec3 reflectDir = reflect(-lightDir, normal);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+            vec3 specular = vec3(0.8, 0.8, 0.8) * spec * uLightIntensity;
+            
+            // Add some color variation based on position to highlight tessellation
+            vec3 color = vec3(0.8, 0.6, 0.4); // Base teapot color
+            color += vec3(0.1) * sin(vWorldPos.x * 5.0) * sin(vWorldPos.y * 5.0) * sin(vWorldPos.z * 5.0);
+            
+            // Combine lights
+            vec3 result = (ambient + diffuse + specular) * color;
+            
+            gl_FragColor = vec4(result, 1.0);
+        }
     }
 `;
 
@@ -203,6 +228,7 @@ async function main() {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
             lightIntensity: gl.getUniformLocation(shaderProgram, 'uLightIntensity'),
+            wireframeMode: gl.getUniformLocation(shaderProgram, 'uWireframeMode'),
         },
     };
 
@@ -222,6 +248,7 @@ async function main() {
     let rotationX = 0;
     let rotationY = 0;
     let zoom = -6.0;
+    let wireframeMode = false;
 
     // Event listeners for controls
     document.getElementById('rotationSpeed').addEventListener('input', (e) => {
@@ -234,6 +261,12 @@ async function main() {
 
     document.getElementById('tessellation').addEventListener('input', (e) => {
         tessellation = parseInt(e.target.value);
+        document.getElementById('tessellationValue').textContent = tessellation;
+        generateTeapot();
+    });
+
+    document.getElementById('wireframeMode').addEventListener('change', (e) => {
+        wireframeMode = e.target.checked;
         generateTeapot();
     });
 
@@ -279,6 +312,10 @@ async function main() {
             indexOffset += vertices.length / 3;
         });
 
+        // Calculate triangle count
+        const triangleCount = allIndices.length / 3;
+        document.getElementById('triangleCountValue').textContent = triangleCount.toLocaleString();
+
         // Create buffers
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -296,6 +333,9 @@ async function main() {
     }
 
     let teapotBuffers = generateTeapot();
+
+    // Initialize display values
+    document.getElementById('tessellationValue').textContent = tessellation;
 
     // Draw the scene
     function drawScene() {
@@ -356,6 +396,9 @@ async function main() {
         gl.uniform1f(
             programInfo.uniformLocations.lightIntensity,
             lightIntensity);
+        gl.uniform1i(
+            programInfo.uniformLocations.wireframeMode,
+            wireframeMode ? 1 : 0);
 
         // Draw the elements
         gl.drawElements(gl.TRIANGLES, teapotBuffers.indexCount, gl.UNSIGNED_SHORT, 0);
