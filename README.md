@@ -3,6 +3,7 @@
 #### The main goal of this project is to exhibits a 3D model of the Utah Teapot and learn on the process.
 
 #### This project is deployed at: [https://ifma-cg-utah-teapot.tiiny.site](https://ifma-cg-utah-teapot.tiiny.site)
+#### Video Presentation: [https://youtu.be/4U_2Po9MDK8](https://youtu.be/4U_2Po9MDK8)
 
 ## IFMA - Campus Imperatriz
 - Subject: Graphics Computation
